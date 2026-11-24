@@ -28,7 +28,7 @@ object Inbox {
         if (displayName(resolver, doc) != name) {
             doc = DocumentsContract.renameDocument(resolver, doc, name) ?: doc
         }
-        resolver.openOutputStream(doc, "w")?.use { it.write("$id\n".toByteArray()) }
+        resolver.openOutputStream(doc, "wt")?.use { it.write("$id\n".toByteArray()) }
             ?: throw IOException("no se pudo abrir el archivo")
         return Result.WRITTEN
     }
