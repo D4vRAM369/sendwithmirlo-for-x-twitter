@@ -133,7 +133,8 @@ AGP 8.7.3, Kotlin 2.1.0, [libxposed](https://github.com/libxposed/api) API 102 (
 `hook.MirloModule`, declarada en `app/src/main/resources/META-INF/xposed/java_init.list`. R8 está desactivado a
 propósito: renombraría esa clase.
 
-Para firmar una release, copia `keystore.properties.example` como `keystore.properties` (git lo ignora) y rellénalo.
+Para firmar una release, copia `keystore.properties.example` como `keystore.properties` en la carpeta que contiene este repo
+(o en su raíz, ignorado por git) y rellénalo.
 Sin él, `assembleRelease` genera un APK sin firmar.
 
 ## Privacidad

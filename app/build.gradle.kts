@@ -5,9 +5,10 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-// Firma de release: datos en keystore.properties (raíz del proyecto, fuera de git). Sin ese archivo,
-// assembleRelease sale sin firmar y el resto del proyecto compila igual.
-val signing = rootProject.file("keystore.properties").takeIf { it.exists() }?.let { f ->
+// Firma de release: datos en keystore.properties, en la carpeta que contiene este repo (así las contraseñas
+// ni siquiera están dentro del repo) o, si no, en su raíz (ignorado por git). Sin ese archivo, assembleRelease
+// sale sin firmar y el resto del proyecto compila igual.
+val signing = listOf("../keystore.properties", "keystore.properties").map(rootProject::file).firstOrNull { it.exists() }?.let { f ->
     Properties().apply { f.inputStream().use(::load) }
 }
 
