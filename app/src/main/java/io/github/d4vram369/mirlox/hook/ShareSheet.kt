@@ -1,160 +1,218 @@
 package io.github.d4vram369.mirlox.hook
 
-import android.app.Dialog
+import android.content.res.ColorStateList
+import android.content.res.Configuration
+import android.graphics.Color
+import android.graphics.Rect
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
 import android.os.Handler
 import android.os.Looper
+import android.text.TextUtils
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
+import android.view.ViewTreeObserver
+import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityNodeProvider
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.PopupWindow
 import android.widget.TextView
 
 /**
- * Añade "Enviar a Mirlo" al menú Compartir de X, debajo de "Copiar enlace".
+ * Añade «Mirlo» a la hoja Compartir de X, con el aspecto de los destinos de su fila
+ * (Copiar enlace, WhatsApp…).
  *
- * Funciona si ese menú está hecho con vistas clásicas (TextView dentro de un LinearLayout
- * vertical, o de un RecyclerView dentro de uno). Si X lo pinta con Compose o con otra
- * estructura no se toca nada y se vuelca el árbol de vistas al log (etiqueta MirloX) para
- * adaptar la hook: en ese caso sigue funcionando Compartir → Enviar a Mirlo (Chooser.kt).
+ * X pinta esa hoja con Jetpack Compose, en una ventana propia: no hay TextView ni listas donde
+ * meter una vista. Lo que sí hay es el árbol de accesibilidad de Compose (el que leen TalkBack
+ * y uiautomator), que da el texto, la posición y la acción "pulsar" de cada elemento. Con él:
+ *  1. se localiza «Copiar enlace» y su fila;
+ *  2. se pone encima de la ventana una vista propia, alineada con la primera columna de la fila;
+ *  3. al pulsarla se pulsa «Copiar enlace» por accesibilidad y Clipboard.kt se queda el enlace.
  */
 internal object ShareSheet {
     private const val MARK = "mirlo-send"
-    private val COPY_LABELS = listOf("copy link", "copiar enlace", "copiar link", "copiar vínculo")
-    private val RETRY_AT_MS = longArrayOf(0, 150, 400, 900, 1600) // el menú puede rellenarse tarde
+    private const val MIRLO_BLUE = 0xFF2446C7.toInt()
+    private val COPY_LABELS = listOf("copiar enlace", "copy link", "copiar link", "copiar vínculo")
+    private val RETRY_AT_MS = longArrayOf(150, 400, 900, 1600) // la hoja entra animada y se rellena tarde
+    private const val MAX_NODES = 600 // tope por si el árbol es enorme (una ventana que no es la hoja)
     private val main = Handler(Looper.getMainLooper())
 
-    private sealed interface Outcome {
-        data object Injected : Outcome
-        data object NoCopyRow : Outcome
-        data class Cannot(val why: String) : Outcome
+    /** API oculta de AccessibilityNodeInfo: id del hijo i (id virtual en los 32 bits altos). */
+    private val getChildId by lazy {
+        AccessibilityNodeInfo::class.java.getDeclaredMethod("getChildId", Int::class.javaPrimitiveType)
     }
 
     fun hook() {
-        hook(Dialog::class.java, "show", h = after { p ->
-            (p.thisObject as Dialog).window?.decorView?.let(::watch)
+        // Toda ventana nueva del proceso pasa por aquí: diálogos, popups y las ventanas de Compose.
+        val n = hookAll(Class.forName("android.view.WindowManagerGlobal"), "addView", after { p ->
+            (p.args[0] as? ViewGroup)?.let(::watch)
         })
-        val popup = after { p -> (p.thisObject as PopupWindow).contentView?.rootView?.let(::watch) }
-        hookAll(PopupWindow::class.java, "showAtLocation", popup)
-        hookAll(PopupWindow::class.java, "showAsDropDown", popup)
+        if (n == 0) log("WindowManagerGlobal.addView no encontrado: sin botón en la hoja")
     }
 
-    private fun watch(root: View) {
-        fun attempt(n: Int) {
-            when (val outcome = runCatching { tryInject(root) }.getOrElse { Outcome.Cannot("excepción: $it") }) {
-                Outcome.Injected -> Unit
-                is Outcome.Cannot -> Diagnose.dump(root, outcome.why)
-                Outcome.NoCopyRow ->
-                    if (n + 1 < RETRY_AT_MS.size) main.postDelayed({ attempt(n + 1) }, RETRY_AT_MS[n + 1] - RETRY_AT_MS[n])
-                    else if (Diagnose.looksLikeShare(root)) Diagnose.dump(root, "no encuentro «Copiar enlace» como TextView")
+    private fun watch(root: ViewGroup) {
+        fun attempt(i: Int) {
+            if (!root.isAttachedToWindow || root.findViewWithTag<View>(MARK) != null) return
+            val found = runCatching { find(root) }.onFailure { log("buscando la hoja: $it") }.getOrNull()
+            when {
+                found != null -> inject(root, found)
+                i + 1 < RETRY_AT_MS.size -> main.postDelayed({ attempt(i + 1) }, RETRY_AT_MS[i + 1] - RETRY_AT_MS[i])
+                else -> log("ventana sin «Copiar enlace»: ${root.javaClass.name}")
             }
         }
-        main.post { attempt(0) }
+        main.postDelayed({ attempt(0) }, RETRY_AT_MS[0])
     }
 
-    private fun tryInject(root: View): Outcome {
-        if (root.findViewWithTag<View>(MARK) != null) return Outcome.Injected
-        val label = findCopyLabel(root) ?: return Outcome.NoCopyRow
+    /** Lo que hace falta de la hoja: quién la pinta y los ids de «Copiar enlace» y de su fila. */
+    private class Sheet(
+        val provider: AccessibilityNodeProvider,
+        val copyId: Int,     // el elemento pulsable «Copiar enlace»
+        val labelId: Int,    // su texto (para medir la tipografía)
+        val firstId: Int,    // el primer elemento de la fila (para alinear la columna)
+    )
 
-        // lo que X escucha al pulsar: el primer ancestro pulsable (puede ser el propio texto)
-        val click = ancestors(label, root).firstOrNull { it.isClickable }
-            ?: return Outcome.Cannot("«Copiar enlace» sin nada pulsable encima")
-        // la fila: el hijo directo de la lista vertical, buscado desde lo pulsable y no desde el
-        // texto, para no acabar dentro de una fila con título y subtítulo apilados
-        val row = ancestors(click, root).firstOrNull { (it.parent as? ViewGroup)?.let(::isList) == true }
-            ?: return Outcome.Cannot("no hay lista vertical encima de «Copiar enlace»")
-        if (row.height == 0) return Outcome.NoCopyRow // aún sin medir: se reintenta
-
-        val list = row.parent as ViewGroup
-        val (container, index) = if (list is LinearLayout) {
-            list to list.indexOfChild(row) + 1
-        } else {
-            // en un RecyclerView no se puede meter una vista a mano: va justo debajo de la lista
-            val outer = list.parent as? LinearLayout
-            if (outer == null || outer.orientation != LinearLayout.VERTICAL) {
-                return Outcome.Cannot("lista reciclable dentro de ${list.parent?.javaClass?.name}")
-            }
-            outer to outer.indexOfChild(list) + 1
-        }
-        container.addView(buildItem(row, label, click), index,
-            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
-        log("botón añadido (lista: ${list.javaClass.name})")
-        return Outcome.Injected
-    }
-
-    /** Copia el aspecto de la fila de "Copiar enlace": altura, fondo y tipografía, con el texto alineado. */
-    private fun buildItem(row: View, label: TextView, click: View): View {
-        val context = row.context
-        return TextView(context).apply {
-            tag = MARK
-            text = sendLabel()
-            setTextColor(label.textColors)
-            setTextSize(TypedValue.COMPLEX_UNIT_PX, label.textSize)
-            typeface = label.typeface
-            gravity = Gravity.CENTER_VERTICAL or Gravity.START
-            minHeight = row.height
-            setPaddingRelative(leftWithin(label, row), 0, row.paddingEnd, 0)
-            background = row.background?.constantState?.newDrawable(resources)?.mutate() ?: ripple(this)
-            isClickable = true
-            isFocusable = true
-            setOnClickListener {
-                Clipboard.arm(context)
-                if (!click.performClick()) {
-                    Clipboard.disarm()
-                    return@setOnClickListener log("«Copiar enlace» no respondió a performClick")
+    private fun find(root: View): Sheet? {
+        for (host in composeHosts(root)) {
+            val provider = host.accessibilityNodeProvider ?: continue
+            // recorrido en anchura del árbol virtual, apuntando el padre de cada nodo
+            val parent = HashMap<Int, Int>()
+            val children = HashMap<Int, List<Int>>()
+            val queue = ArrayDeque(listOf(AccessibilityNodeProvider.HOST_VIEW_ID))
+            var visited = 0
+            while (queue.isNotEmpty() && visited++ < MAX_NODES) {
+                val id = queue.removeFirst()
+                val info = provider.createAccessibilityNodeInfo(id) ?: continue
+                val text = (info.text ?: info.contentDescription)?.toString()?.trim()?.lowercase()
+                if (text != null && COPY_LABELS.any { text.startsWith(it) }) {
+                    // lo que X escucha al pulsar: el propio texto o el primer antecesor pulsable
+                    val copy = generateSequence(id) { parent[it] }
+                        .firstOrNull { provider.createAccessibilityNodeInfo(it)?.isClickable == true } ?: return null
+                    val siblings = parent[copy]?.let { children[it] }.orEmpty()
+                    val first = siblings.minByOrNull { bounds(provider, it)?.left ?: Int.MAX_VALUE } ?: copy
+                    return Sheet(provider, copy, id, first)
                 }
-                main.postDelayed({
-                    if (Clipboard.disarm()) {
-                        log("X no copió ningún enlace tras pulsar «Copiar enlace»")
-                        toast(context, "Mirlo: X no ha dado el enlace de este post", "Mirlo: X did not give the link to this post")
-                    }
-                }, 2_600)
+                val kids = (0 until info.childCount).map { ((getChildId.invoke(info, it) as Long) ushr 32).toInt() }
+                    .filter { it != AccessibilityNodeProvider.HOST_VIEW_ID && it !in parent }
+                children[id] = kids
+                kids.forEach { parent[it] = id; queue += it }
             }
         }
-    }
-
-    private fun findCopyLabel(view: View): TextView? {
-        if (view is TextView && view.isShown) {
-            val text = view.text?.toString()?.trim()?.lowercase().orEmpty()
-            if (COPY_LABELS.any { text.startsWith(it) }) return view
-        }
-        if (view is ViewGroup) for (i in 0 until view.childCount) findCopyLabel(view.getChildAt(i))?.let { return it }
         return null
     }
 
-    private fun isList(group: ViewGroup) =
-        (group is LinearLayout && group.orientation == LinearLayout.VERTICAL) || isRecycler(group)
-
-    /** Sin depender de AndroidX de X (puede ir renombrado): basta con el nombre en la jerarquía. */
-    private fun isRecycler(group: ViewGroup): Boolean {
-        if (group is AdapterView<*>) return true
-        var c: Class<*>? = group.javaClass
-        while (c != null) {
-            if (c.name.endsWith("RecyclerView")) return true
-            c = c.superclass
-        }
-        return false
+    /** Las vistas con árbol de accesibilidad virtual (AndroidComposeView, aunque X la ofusque). */
+    private fun composeHosts(v: View): Sequence<View> = sequence {
+        if (v.accessibilityNodeProvider != null) yield(v)
+        if (v is ViewGroup) for (i in 0 until v.childCount) yieldAll(composeHosts(v.getChildAt(i)))
     }
 
-    /** De la vista hacia arriba, sin salir de root. */
-    private fun ancestors(from: View, root: View): Sequence<View> =
-        generateSequence(from) { v -> if (v === root) null else v.parent as? View }
+    private fun bounds(provider: AccessibilityNodeProvider, id: Int): Rect? =
+        provider.createAccessibilityNodeInfo(id)?.let { info -> Rect().also(info::getBoundsInScreen) }
+            ?.takeIf { !it.isEmpty }
 
-    private fun leftWithin(child: View, ancestor: View): Int {
-        var x = 0
-        var v: View = child
-        while (v !== ancestor) {
-            x += v.left
-            v = v.parent as? View ?: break
+    private fun inject(root: ViewGroup, sheet: Sheet) {
+        val copy = bounds(sheet.provider, sheet.copyId) ?: return
+        val label = bounds(sheet.provider, sheet.labelId) ?: copy
+        val item = buildItem(root, sheet, copy, label)
+        root.addView(item, FrameLayout.LayoutParams(copy.width(), copy.height(), Gravity.TOP or Gravity.START))
+
+        // La hoja entra animada, se puede arrastrar y la fila se desplaza: en cada fotograma se
+        // recoloca según dónde esté ahora el primer elemento de la fila. Si ya no está, se oculta.
+        val gap = dp(root, 12f)
+        val origin = IntArray(2)
+        val follow = object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                val first = runCatching { bounds(sheet.provider, sheet.firstId) }.getOrNull()
+                val now = runCatching { bounds(sheet.provider, sheet.copyId) }.getOrNull()
+                if (first == null || now == null) {
+                    item.visibility = View.INVISIBLE
+                    return true
+                }
+                root.getLocationOnScreen(origin)
+                item.visibility = View.VISIBLE
+                item.translationX = (first.left - origin[0]).toFloat()
+                item.translationY = (now.top - origin[1] - now.height() - gap).toFloat()
+                return true
+            }
         }
-        return x
+        root.viewTreeObserver.addOnPreDrawListener(follow)
+        item.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) = Unit
+            override fun onViewDetachedFromWindow(v: View) = root.viewTreeObserver.removeOnPreDrawListener(follow)
+        })
+        follow.onPreDraw()
+        log("botón añadido a la hoja Compartir")
     }
 
-    private fun ripple(view: View) = runCatching {
-        val out = TypedValue()
-        view.context.theme.resolveAttribute(android.R.attr.selectableItemBackground, out, true)
-        view.context.getDrawable(out.resourceId)
-    }.getOrNull()
+    /** Círculo con el mirlo y la etiqueta debajo, con las proporciones de «Copiar enlace». */
+    private fun buildItem(root: ViewGroup, sheet: Sheet, copy: Rect, label: Rect): View {
+        val context = root.context
+        val dark = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+            Configuration.UI_MODE_NIGHT_YES // ponytail: tema del sistema; si X va en otro tema, el texto desentona
+        val top = label.top - copy.top                      // círculo + márgenes, encima del texto
+        val margin = (top * 0.13f).toInt()
+        val diameter = top - 2 * margin
+
+        val circle = ImageView(context).apply {
+            val oval = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(MIRLO_BLUE) }
+            background = RippleDrawable(ColorStateList.valueOf(0x40FFFFFF), oval, null)
+            setImageDrawable(birdIcon(context)?.mutate()?.apply { setTint(Color.WHITE) })
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            val pad = (diameter * 0.24f).toInt()
+            setPadding(pad, pad, pad, pad)
+            isDuplicateParentStateEnabled = true // el ripple del círculo responde al pulsar todo el elemento
+        }
+        val text = TextView(context).apply {
+            text = "Mirlo"
+            setTextColor(if (dark) 0xFFE7E9EA.toInt() else 0xFF0F1419.toInt())
+            setTextSize(TypedValue.COMPLEX_UNIT_PX, label.height() / 1.17f) // alto de línea → tamaño de letra
+            gravity = Gravity.CENTER
+            maxLines = 1
+            ellipsize = TextUtils.TruncateAt.END
+            includeFontPadding = false
+        }
+        return LinearLayout(context).apply {
+            tag = MARK
+            contentDescription = sendLabel()
+            isClickable = true
+            setOnClickListener { send(context, sheet) }
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            addView(circle, LinearLayout.LayoutParams(diameter, diameter).apply { topMargin = margin; bottomMargin = margin })
+            addView(text, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, label.height()))
+        }
+    }
+
+    private fun send(context: android.content.Context, sheet: Sheet) {
+        Clipboard.arm(context)
+        if (!sheet.provider.performAction(sheet.copyId, AccessibilityNodeInfo.ACTION_CLICK, null)) {
+            Clipboard.disarm()
+            log("«Copiar enlace» no respondió a la pulsación por accesibilidad")
+            toast(context, "Mirlo: no he podido pulsar «Copiar enlace»", "Mirlo: could not press \"Copy link\"")
+            return
+        }
+        main.postDelayed({
+            if (Clipboard.disarm()) {
+                log("X no copió ningún enlace tras pulsar «Copiar enlace»")
+                toast(context, "Mirlo: X no ha dado el enlace de este post", "Mirlo: X did not give the link to this post")
+            }
+        }, 2_600)
+    }
+
+    /**
+     * El icono vive en los recursos del módulo, no en los de X. getResourcesForApplication con el
+     * ApplicationInfo que da LSPatch los abre sin necesitar que X "vea" el paquete del módulo.
+     */
+    private var bird: Drawable? = null
+    private fun birdIcon(context: android.content.Context): Drawable? = bird ?: runCatching {
+        val res = context.packageManager.getResourcesForApplication(xposed.moduleApplicationInfo)
+        res.getDrawable(res.getIdentifier("ic_mirlo", "drawable", MODULE_PACKAGE), null)
+    }.onFailure { log("sin icono del módulo: $it") }.getOrNull()?.also { bird = it }
+
+    private fun dp(v: View, value: Float) =
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, v.resources.displayMetrics).toInt()
 }

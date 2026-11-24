@@ -71,9 +71,9 @@ internal fun hook(method: Executable, h: Hook) {
 internal fun hook(cls: Class<*>, name: String, vararg types: Class<*>, h: Hook) =
     hook(cls.getDeclaredMethod(name, *types), h)
 
-/** Todas las sobrecargas de [name] (equivale a hookAllMethods). */
-internal fun hookAll(cls: Class<*>, name: String, h: Hook) =
-    cls.declaredMethods.filter { it.name == name }.forEach { hook(it, h) }
+/** Todas las sobrecargas de [name] (equivale a hookAllMethods). Devuelve cuántas enganchó. */
+internal fun hookAll(cls: Class<*>, name: String, h: Hook): Int =
+    cls.declaredMethods.filter { it.name == name }.onEach { hook(it, h) }.size
 
 private inline fun guarded(body: () -> Unit) {
     try { body() } catch (t: Throwable) { log("fallo en hook: ${Log.getStackTraceString(t)}") }
