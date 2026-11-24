@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mirlo for X</string>
+    <string name="send_label">Send to Mirlo</string>
+    <string name="xposed_description">Adds \"Send to Mirlo\" to the X app. Posts are queued in a folder that Syncthing carries to Mirlo-desktop.</string>
+    <string name="setup_title">Mirlo for X</string>
+    <string name="setup_help">1. In Syncthing, share a folder between this phone and ~/Mirlo/.inbox on your computer.\n2. Pick that same folder below.\n3. Patch X with LSPatch and enable this module for it.\n\nEach send leaves a small &lt;ID&gt;.mirlo file there. Mirlo-desktop picks it up within seconds when it is open, or the next time you open it. Without the module you can still use Share → Send to Mirlo.</string>
+    <string name="setup_pick">Choose folder</string>
+    <string name="setup_folder">Folder: %1$s</string>
+    <string name="setup_no_folder">No folder chosen yet.</string>
+    <string name="sent">Sent to Mirlo</string>
+    <string name="already_queued">Already waiting in the folder</string>
+    <string name="not_a_post">That is not a link to a post on X</string>
+    <string name="send_failed">Could not write to the folder: %1$s</string>
+    <string name="lost_access">Mirlo lost access to the folder. Choose it again.</string>
+</resources>

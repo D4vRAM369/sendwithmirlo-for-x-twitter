@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mirlo para X</string>
+    <string name="send_label">Enviar a Mirlo</string>
+    <string name="xposed_description">Añade «Enviar a Mirlo» a la app de X. Los posts esperan en una carpeta que Syncthing lleva a Mirlo-desktop.</string>
+    <string name="setup_title">Mirlo para X</string>
+    <string name="setup_help">1. En Syncthing, comparte una carpeta entre este móvil y ~/Mirlo/.inbox en tu ordenador.\n2. Elige esa misma carpeta aquí abajo.\n3. Parchea X con LSPatch y activa este módulo para X.\n\nCada envío deja un pequeño archivo &lt;ID&gt;.mirlo en ella. Mirlo-desktop lo recoge en segundos si está abierto, o la próxima vez que lo abras. Sin el módulo también puedes usar Compartir → Enviar a Mirlo.</string>
+    <string name="setup_pick">Elegir carpeta</string>
+    <string name="setup_folder">Carpeta: %1$s</string>
+    <string name="setup_no_folder">Todavía no hay carpeta.</string>
+    <string name="sent">Enviado a Mirlo</string>
+    <string name="already_queued">Ya estaba esperando en la carpeta</string>
+    <string name="not_a_post">Eso no es un enlace a un post de X</string>
+    <string name="send_failed">No se pudo escribir en la carpeta: %1$s</string>
+    <string name="lost_access">Mirlo ha perdido el acceso a la carpeta. Vuelve a elegirla.</string>
+</resources>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="false"
+        android:icon="@drawable/ic_mirlo"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.MirloX">
+
+        <!-- Lo que LSPatch lee para tratar este APK como módulo -->
+        <meta-data android:name="xposedmodule" android:value="true" />
+        <meta-data android:name="xposeddescription" android:value="@string/xposed_description" />
+        <meta-data android:name="xposedminversion" android:value="82" />
+        <meta-data android:name="xposedscope" android:resource="@array/xposed_scope" />
+
+        <activity
+            android:name=".SetupActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            Recibe el enlace y deja <ID>.mirlo en la carpeta. La abre el botón inyectado en X y,
+            sin módulo, cualquier "Compartir" de Android (aparece como "Enviar a Mirlo").
+            Exportada a propósito: lo peor que puede hacer otra app es encolar un post de X,
+            igual que cualquier web con mirlo://save/ en el escritorio.
+        -->
+        <activity
+            android:name=".SendActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:icon="@drawable/ic_mirlo"
+            android:label="@string/send_label"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
