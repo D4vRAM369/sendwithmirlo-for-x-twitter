@@ -1,16 +1,14 @@
 package io.github.d4vram369.mirlox.hook
 
-import android.app.AndroidAppHelper
 import android.app.Application
 import android.app.Instrumentation
 import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
-import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers
 import io.github.d4vram369.mirlox.PostId
+import io.github.libxposed.api.XposedInterface
+import java.lang.reflect.Executable
 import java.util.Locale
 
 // Todo lo de este paquete se ejecuta DENTRO del proceso de X. Aquí no existen los recursos del
@@ -24,7 +22,6 @@ private const val TAG = "MirloX"
 
 internal fun log(message: String) {
     Log.i(TAG, message)
-    runCatching { XposedBridge.log("$TAG: $message") }
 }
 
 internal fun isSpanish() = Locale.getDefault().language == "es"
@@ -33,16 +30,53 @@ internal fun sendLabel() = if (isSpanish()) "Enviar a Mirlo" else "Send to Mirlo
 internal fun toast(context: Context, es: String, en: String) =
     runCatching { Toast.makeText(context, if (isSpanish()) es else en, Toast.LENGTH_SHORT).show() }
 
-internal inline fun after(crossinline body: (XC_MethodHook.MethodHookParam) -> Unit) = object : XC_MethodHook() {
-    override fun afterHookedMethod(param: MethodHookParam) {
-        try { body(param) } catch (t: Throwable) { log("fallo en hook: ${Log.getStackTraceString(t)}") }
+/** El módulo ya cargado (lo fija MirloModule). A través de él se instalan las hooks. */
+internal lateinit var xposed: XposedInterface
+
+/** Lo que ve una hook, al estilo de la API clásica: argumentos, objeto y resultado. */
+internal class Param(private val chain: XposedInterface.Chain) {
+    val args: List<Any?> get() = chain.args
+    val thisObject: Any? get() = chain.thisObject
+    var result: Any? = null
+    var skipped = false
+        private set
+
+    /** Desde un `before`: no se llama al método original y devuelve [result]. */
+    fun skip(result: Any? = null) {
+        skipped = true
+        this.result = result
     }
 }
 
-internal inline fun before(crossinline body: (XC_MethodHook.MethodHookParam) -> Unit) = object : XC_MethodHook() {
-    override fun beforeHookedMethod(param: MethodHookParam) {
-        try { body(param) } catch (t: Throwable) { log("fallo en hook: ${Log.getStackTraceString(t)}") }
+internal class Hook(val before: ((Param) -> Unit)? = null, val after: ((Param) -> Unit)? = null)
+
+internal fun before(body: (Param) -> Unit) = Hook(before = body)
+internal fun after(body: (Param) -> Unit) = Hook(after = body)
+
+/**
+ * Equivalente de findAndHookMethod. Un fallo DENTRO de la hook se registra y se traga (X sigue);
+ * una excepción del método original sí se propaga, como si no hubiera hook.
+ */
+internal fun hook(method: Executable, h: Hook) {
+    xposed.hook(method).intercept { chain ->
+        val p = Param(chain)
+        h.before?.let { guarded { it(p) } }
+        if (p.skipped) return@intercept p.result
+        p.result = chain.proceed()
+        h.after?.let { guarded { it(p) } }
+        p.result
     }
+}
+
+internal fun hook(cls: Class<*>, name: String, vararg types: Class<*>, h: Hook) =
+    hook(cls.getDeclaredMethod(name, *types), h)
+
+/** Todas las sobrecargas de [name] (equivale a hookAllMethods). */
+internal fun hookAll(cls: Class<*>, name: String, h: Hook) =
+    cls.declaredMethods.filter { it.name == name }.forEach { hook(it, h) }
+
+private inline fun guarded(body: () -> Unit) {
+    try { body() } catch (t: Throwable) { log("fallo en hook: ${Log.getStackTraceString(t)}") }
 }
 
 /** El Application de X, para abrir la actividad del módulo desde cualquier sitio. */
@@ -51,13 +85,14 @@ internal object HostApp {
     private var app: Application? = null
 
     val context: Context?
-        get() = app ?: runCatching { AndroidAppHelper.currentApplication() }.getOrNull()
+        get() = app ?: runCatching {
+            // API oculta de Android: devuelve el Application del proceso actual
+            Class.forName("android.app.ActivityThread").getMethod("currentApplication").invoke(null) as Application?
+        }.getOrNull()
 
     fun hook() {
-        XposedHelpers.findAndHookMethod(
-            Instrumentation::class.java, "callApplicationOnCreate", Application::class.java,
-            before { app = it.args[0] as Application },
-        )
+        hook(Instrumentation::class.java, "callApplicationOnCreate", Application::class.java,
+            h = before { app = it.args[0] as Application })
     }
 }
 

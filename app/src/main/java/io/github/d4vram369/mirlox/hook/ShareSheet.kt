@@ -11,8 +11,6 @@ import android.widget.AdapterView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
-import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers
 
 /**
  * Añade "Enviar a Mirlo" al menú Compartir de X, debajo de "Copiar enlace".
@@ -35,12 +33,12 @@ internal object ShareSheet {
     }
 
     fun hook() {
-        XposedHelpers.findAndHookMethod(Dialog::class.java, "show", after { p ->
+        hook(Dialog::class.java, "show", h = after { p ->
             (p.thisObject as Dialog).window?.decorView?.let(::watch)
         })
         val popup = after { p -> (p.thisObject as PopupWindow).contentView?.rootView?.let(::watch) }
-        XposedBridge.hookAllMethods(PopupWindow::class.java, "showAtLocation", popup)
-        XposedBridge.hookAllMethods(PopupWindow::class.java, "showAsDropDown", popup)
+        hookAll(PopupWindow::class.java, "showAtLocation", popup)
+        hookAll(PopupWindow::class.java, "showAsDropDown", popup)
     }
 
     private fun watch(root: View) {

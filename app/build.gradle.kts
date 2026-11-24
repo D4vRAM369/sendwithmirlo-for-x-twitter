@@ -17,7 +17,7 @@ android {
 
     buildTypes {
         release {
-            // Sin R8: renombraría la clase que LSPatch busca por su nombre en assets/xposed_init.
+            // Sin R8: renombraría la clase que LSPatch busca por su nombre en META-INF/xposed/java_init.list.
             isMinifyEnabled = false
         }
     }
@@ -33,6 +33,6 @@ kotlin {
 }
 
 dependencies {
-    // compileOnly: la API la pone LSPatch dentro del proceso de X; meterla en el APK rompe la carga.
-    compileOnly("de.robv.android.xposed:api:82")
+    // compileOnly: la API (libxposed, la moderna) la pone LSPatch dentro del proceso de X; meterla en el APK rompe la carga.
+    compileOnly("io.github.libxposed:api:102.0.0")
 }

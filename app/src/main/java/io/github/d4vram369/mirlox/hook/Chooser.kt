@@ -4,7 +4,6 @@ import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.LabeledIntent
 import android.os.Parcelable
-import de.robv.android.xposed.XposedHelpers
 import io.github.d4vram369.mirlox.PostId
 
 /**
@@ -16,9 +15,9 @@ import io.github.d4vram369.mirlox.PostId
  */
 internal object Chooser {
     fun hook() {
-        XposedHelpers.findAndHookMethod(
+        hook(
             Intent::class.java, "createChooser", Intent::class.java, CharSequence::class.java, IntentSender::class.java,
-            after { p ->
+            h = after { p ->
                 val chooser = p.result as? Intent ?: return@after
                 val target = p.args[0] as? Intent ?: return@after
                 if (target.action != Intent.ACTION_SEND) return@after

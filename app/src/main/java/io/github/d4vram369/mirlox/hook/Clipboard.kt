@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.SystemClock
-import de.robv.android.xposed.XposedHelpers
 import io.github.d4vram369.mirlox.PostId
 
 /**
@@ -32,13 +31,13 @@ internal object Clipboard {
     }
 
     fun hook() {
-        XposedHelpers.findAndHookMethod(ClipboardManager::class.java, "setPrimaryClip", ClipData::class.java, before { p ->
+        hook(ClipboardManager::class.java, "setPrimaryClip", ClipData::class.java, h = before { p ->
             if (SystemClock.uptimeMillis() > armedUntil) return@before
             val clip = p.args[0] as? ClipData ?: return@before
             val text = (0 until clip.itemCount).joinToString(" ") { clip.getItemAt(it).text?.toString().orEmpty() }
             val id = PostId.fromText(text) ?: return@before log("X copió algo que no es un post")
             armedUntil = 0
-            p.result = null // se salta el setPrimaryClip original
+            p.skip() // se salta el setPrimaryClip original
             val context = armedContext ?: HostApp.context ?: return@before log("sin contexto para enviar $id")
             Sender.send(context, id)
         })
