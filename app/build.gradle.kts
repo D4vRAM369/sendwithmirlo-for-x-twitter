@@ -1,6 +1,14 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+}
+
+// Firma de release: datos en keystore.properties (raíz del proyecto, fuera de git). Sin ese archivo,
+// assembleRelease sale sin firmar y el resto del proyecto compila igual.
+val signing = rootProject.file("keystore.properties").takeIf { it.exists() }?.let { f ->
+    Properties().apply { f.inputStream().use(::load) }
 }
 
 android {
@@ -15,8 +23,18 @@ android {
         versionName = "0.1.0"
     }
 
+    signingConfigs {
+        if (signing != null) create("release") {
+            storeFile = file(signing.getProperty("storeFile"))
+            storePassword = signing.getProperty("storePassword")
+            keyAlias = signing.getProperty("keyAlias")
+            keyPassword = signing.getProperty("keyPassword")
+        }
+    }
+
     buildTypes {
         release {
+            if (signing != null) signingConfig = signingConfigs.getByName("release")
             // Sin R8: renombraría la clase que LSPatch busca por su nombre en META-INF/xposed/java_init.list.
             isMinifyEnabled = false
         }
