@@ -1,4 +1,4 @@
-package io.github.d4vram369.mirlox
+package io.github.d4vram369.sendwithmirlo
 
 import android.app.Activity
 import android.content.Intent

@@ -1,10 +1,10 @@
-package io.github.d4vram369.mirlox.hook
+package io.github.d4vram369.sendwithmirlo.hook
 
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.SystemClock
-import io.github.d4vram369.mirlox.PostId
+import io.github.d4vram369.sendwithmirlo.PostId
 
 /**
  * Cómo se saca el ID sin conocer las clases de X: el botón de Mirlo pulsa por debajo la opción

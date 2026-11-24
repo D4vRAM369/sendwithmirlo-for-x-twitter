@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "io.github.d4vram369.mirlox"
+    namespace = "io.github.d4vram369.sendwithmirlo"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "io.github.d4vram369.mirlox"
+        applicationId = "io.github.d4vram369.sendwithmirlo"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

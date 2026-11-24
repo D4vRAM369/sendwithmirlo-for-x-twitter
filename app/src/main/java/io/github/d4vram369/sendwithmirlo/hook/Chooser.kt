@@ -1,10 +1,10 @@
-package io.github.d4vram369.mirlox.hook
+package io.github.d4vram369.sendwithmirlo.hook
 
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.LabeledIntent
 import android.os.Parcelable
-import io.github.d4vram369.mirlox.PostId
+import io.github.d4vram369.sendwithmirlo.PostId
 
 /**
  * Cuando X abre el selector de Android ("Compartir vía…") con el enlace de un post, pone

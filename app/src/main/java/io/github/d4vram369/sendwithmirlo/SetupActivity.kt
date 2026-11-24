@@ -1,4 +1,4 @@
-package io.github.d4vram369.mirlox
+package io.github.d4vram369.sendwithmirlo
 
 import android.app.Activity
 import android.content.Intent
@@ -84,7 +84,7 @@ class SetupActivity : Activity() {
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
     companion object {
-        const val EXTRA_PENDING = "io.github.d4vram369.mirlox.PENDING_ID"
+        const val EXTRA_PENDING = "io.github.d4vram369.sendwithmirlo.PENDING_ID"
         private const val REQUEST_TREE = 1
     }
 }

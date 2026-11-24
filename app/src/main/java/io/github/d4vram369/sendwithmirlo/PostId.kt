@@ -1,4 +1,4 @@
-package io.github.d4vram369.mirlox
+package io.github.d4vram369.sendwithmirlo
 
 /**
  * El ID de un post de X dentro de un texto ("Mira esto https://x.com/u/status/123?s=19").

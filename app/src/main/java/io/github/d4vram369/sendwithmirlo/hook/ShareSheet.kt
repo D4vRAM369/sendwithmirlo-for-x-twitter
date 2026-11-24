@@ -1,4 +1,4 @@
-package io.github.d4vram369.mirlox.hook
+package io.github.d4vram369.sendwithmirlo.hook
 
 import android.content.res.ColorStateList
 import android.content.res.Configuration

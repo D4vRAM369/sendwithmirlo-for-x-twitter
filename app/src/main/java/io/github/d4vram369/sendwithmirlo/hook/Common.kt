@@ -1,4 +1,4 @@
-package io.github.d4vram369.mirlox.hook
+package io.github.d4vram369.sendwithmirlo.hook
 
 import android.app.Application
 import android.app.Instrumentation
@@ -6,7 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
-import io.github.d4vram369.mirlox.PostId
+import io.github.d4vram369.sendwithmirlo.PostId
 import io.github.libxposed.api.XposedInterface
 import java.lang.reflect.Executable
 import java.util.Locale
@@ -16,7 +16,7 @@ import java.util.Locale
 // una excepción que se escape aquí tumba la app de X.
 
 internal const val X_PACKAGE = "com.twitter.android"
-internal const val MODULE_PACKAGE = "io.github.d4vram369.mirlox"
+internal const val MODULE_PACKAGE = "io.github.d4vram369.sendwithmirlo"
 private const val SEND_ACTIVITY = "$MODULE_PACKAGE.SendActivity"
 private const val TAG = "MirloX"
 
