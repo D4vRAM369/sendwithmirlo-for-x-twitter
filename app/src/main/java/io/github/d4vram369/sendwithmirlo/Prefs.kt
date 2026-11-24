@@ -29,6 +29,8 @@ object Prefs {
     fun save(context: Context, ints: Map<String, Int>, text: String) {
         val e = sp(context).edit()
         ints.forEach { (k, v) -> e.putInt(k, v) }
-        e.putString(REMIND_TEXT, text.ifBlank { null }).apply()
+        // el texto por defecto no se guarda: así sigue el idioma del móvil si este cambia
+        val custom = text.trim().takeUnless { it.isEmpty() || it == context.getString(R.string.remind_default) }
+        e.putString(REMIND_TEXT, custom).apply()
     }
 }
