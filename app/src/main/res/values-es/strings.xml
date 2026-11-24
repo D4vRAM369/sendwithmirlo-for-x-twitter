@@ -13,4 +13,21 @@
     <string name="not_a_post">Eso no es un enlace a un post de X</string>
     <string name="send_failed">No se pudo escribir en la carpeta: %1$s</string>
     <string name="lost_access">Mirlo ha perdido el acceso a la carpeta. Vuelve a elegirla.</string>
+    <string name="remind_default">Recuerda sincronizar los posts enviados a Mirlo desde la app X/Twitter con el PC si no arranca Syncthing con el PC y con el móvil.</string>
+    <string name="remind_title">Recordatorios</string>
+    <string name="remind_days">Recordarme cada (días, 0 = nunca)</string>
+    <string name="remind_text">Texto del recordatorio</string>
+    <string name="remind_threshold">Preguntar si hay al menos (posts pendientes)</string>
+    <string name="remind_hours">Revisar la carpeta cada (horas, 0 = nunca)</string>
+    <string name="remind_help">La pregunta solo sale con WiFi. «Aplicar» arranca Syncthing-Fork y espera a que Mirlo-desktop guarde los posts; para eso, en Syncthing-Fork activa Ajustes › Comportamiento › Control del servicio mediante difusión.</string>
+    <string name="remind_save">Guardar</string>
+    <string name="remind_saved">Guardado</string>
+    <string name="channel_name">Sincronizar con Mirlo-desktop</string>
+    <string name="notif_title">Pendientes para Mirlo: %1$d</string>
+    <string name="check_question">¿Quieres sincronizar tus posts pendientes con Mirlo-desktop?</string>
+    <string name="apply">Aplicar</string>
+    <string name="apply_running">Sincronizando con Mirlo-desktop…</string>
+    <string name="apply_done">Sincronizado. Guardados en Mirlo-desktop: %1$d.</string>
+    <string name="apply_left">Siguen pendientes. ¿Están el PC encendido y Mirlo-desktop abierto?</string>
+    <string name="apply_nothing">No hay nada pendiente.</string>
 </resources>

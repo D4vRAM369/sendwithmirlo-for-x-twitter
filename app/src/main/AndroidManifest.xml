@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- RF-05: avisos, condición «con WiFi» y que los avisos sobrevivan a un reinicio -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Android 11+ oculta las demás apps: sin esto el broadcast START a Syncthing-Fork no llegaría -->
+    <queries>
+        <package android:name="com.github.catfriend1.syncthingfork" />
+    </queries>
+
     <application
         android:allowBackup="false"
         android:icon="@drawable/ic_mirlo"
@@ -43,5 +53,14 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".SyncJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <receiver
+            android:name=".SyncJob$ApplyReceiver"
+            android:exported="false" />
     </application>
 </manifest>

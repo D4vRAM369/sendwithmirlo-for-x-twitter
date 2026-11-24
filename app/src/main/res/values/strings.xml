@@ -13,4 +13,21 @@
     <string name="not_a_post">That is not a link to a post on X</string>
     <string name="send_failed">Could not write to the folder: %1$s</string>
     <string name="lost_access">Mirlo lost access to the folder. Choose it again.</string>
+    <string name="remind_default">Remember to sync the posts you sent to Mirlo from the X/Twitter app with your computer, in case Syncthing does not start on the computer and the phone.</string>
+    <string name="remind_title">Reminders</string>
+    <string name="remind_days">Remind me every (days, 0 = never)</string>
+    <string name="remind_text">Reminder text</string>
+    <string name="remind_threshold">Ask when at least (pending posts)</string>
+    <string name="remind_hours">Check the folder every (hours, 0 = never)</string>
+    <string name="remind_help">The question only shows on Wi-Fi. \"Apply\" starts Syncthing-Fork and waits until Mirlo-desktop saves the posts; for that, enable Settings › Behaviour › Service control by broadcast in Syncthing-Fork.</string>
+    <string name="remind_save">Save</string>
+    <string name="remind_saved">Saved</string>
+    <string name="channel_name">Sync with Mirlo-desktop</string>
+    <string name="notif_title">Waiting for Mirlo: %1$d</string>
+    <string name="check_question">Do you want to sync your pending posts with Mirlo-desktop?</string>
+    <string name="apply">Apply</string>
+    <string name="apply_running">Syncing with Mirlo-desktop…</string>
+    <string name="apply_done">Synced. Saved in Mirlo-desktop: %1$d.</string>
+    <string name="apply_left">Still pending. Is the computer on and Mirlo-desktop open?</string>
+    <string name="apply_nothing">Nothing pending.</string>
 </resources>

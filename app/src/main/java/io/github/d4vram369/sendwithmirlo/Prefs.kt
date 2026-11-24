@@ -3,15 +3,32 @@ package io.github.d4vram369.sendwithmirlo
 import android.content.Context
 import android.net.Uri
 
-/** Solo se guarda una cosa: qué carpeta (de Syncthing) eligió la persona. */
+/** La carpeta (de Syncthing) que eligió la persona y sus ajustes de recordatorio. */
 object Prefs {
     private const val FILE = "mirlo"
     private const val TREE = "inbox_tree"
+    const val REMIND_DAYS = "remind_days" // 0 = nunca
+    const val REMIND_TEXT = "remind_text"
+    const val THRESHOLD = "threshold"
+    const val CHECK_HOURS = "check_hours" // 0 = nunca
+    val DEFAULTS = mapOf(REMIND_DAYS to 3, THRESHOLD to 15, CHECK_HOURS to 24)
 
-    fun tree(context: Context): Uri? =
-        context.getSharedPreferences(FILE, Context.MODE_PRIVATE).getString(TREE, null)?.let(Uri::parse)
+    private fun sp(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+
+    fun tree(context: Context): Uri? = sp(context).getString(TREE, null)?.let(Uri::parse)
 
     fun setTree(context: Context, uri: Uri) {
-        context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().putString(TREE, uri.toString()).apply()
+        sp(context).edit().putString(TREE, uri.toString()).apply()
+    }
+
+    fun int(context: Context, key: String): Int = sp(context).getInt(key, DEFAULTS.getValue(key))
+
+    fun remindText(context: Context): String =
+        sp(context).getString(REMIND_TEXT, null) ?: context.getString(R.string.remind_default)
+
+    fun save(context: Context, ints: Map<String, Int>, text: String) {
+        val e = sp(context).edit()
+        ints.forEach { (k, v) -> e.putInt(k, v) }
+        e.putString(REMIND_TEXT, text.ifBlank { null }).apply()
     }
 }
