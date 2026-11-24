@@ -28,6 +28,7 @@ class SetupActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null && !Prefs.onboarded(this)) startActivity(Intent(this, OnboardingActivity::class.java))
         val pad = dp(20)
         val column = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL

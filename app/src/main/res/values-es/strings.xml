@@ -30,4 +30,14 @@
     <string name="apply_done">Sincronizado. Guardados en Mirlo-desktop: %1$d.</string>
     <string name="apply_left">Siguen pendientes. ¿Están el PC encendido y Mirlo-desktop abierto?</string>
     <string name="apply_nothing">No hay nada pendiente.</string>
+    <string name="onb1_title">Tus posts de X, en tu ordenador</string>
+    <string name="onb1_body">Mirlo-desktop es una bóveda local para posts de X/Twitter: guarda texto, fotos, vídeos y documentos en tu disco, con búsqueda y etiquetas. Sin cuenta ni nube.\n\nEsta app trabaja para él: instálalo primero en tu ordenador (Linux, Windows o macOS).</string>
+    <string name="onb1_link">Descargar Mirlo-desktop</string>
+    <string name="onb2_title">Guardar sin abrir el ordenador</string>
+    <string name="onb2_body">Antes había que abrir Mirlo-desktop y pegar los enlaces uno a uno.\n\nAhora pulsas «Mirlo» en la hoja Compartir de X y listo: el post viaja solo por Syncthing hasta tu ordenador y Mirlo-desktop lo guarda. Si el ordenador está apagado, los envíos esperan en el móvil y te recordamos sincronizar.</string>
+    <string name="onb3_title">Lo que necesitas</string>
+    <string name="onb3_body">1. Syncthing en el móvil y en el ordenador, con una carpeta compartida hacia ~/Mirlo/.inbox en modo «Enviar y recibir».\n2. Este módulo activado para X: LSPatch sin root o LSPosed con root.\n3. Elegir esa carpeta en la siguiente pantalla.</string>
+    <string name="onb3_link">Descargar Syncthing-Fork</string>
+    <string name="onb_next">Siguiente</string>
+    <string name="onb_start">Empezar</string>
 </resources>

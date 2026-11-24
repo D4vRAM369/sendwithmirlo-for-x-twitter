@@ -7,6 +7,7 @@ import android.net.Uri
 object Prefs {
     private const val FILE = "mirlo"
     private const val TREE = "inbox_tree"
+    private const val ONBOARDED = "onboarded"
     const val REMIND_DAYS = "remind_days" // 0 = nunca
     const val REMIND_TEXT = "remind_text"
     const val THRESHOLD = "threshold"
@@ -19,6 +20,12 @@ object Prefs {
 
     fun setTree(context: Context, uri: Uri) {
         sp(context).edit().putString(TREE, uri.toString()).apply()
+    }
+
+    fun onboarded(context: Context) = sp(context).getBoolean(ONBOARDED, false)
+
+    fun setOnboarded(context: Context) {
+        sp(context).edit().putBoolean(ONBOARDED, true).apply()
     }
 
     fun int(context: Context, key: String): Int = sp(context).getInt(key, DEFAULTS.getValue(key))
