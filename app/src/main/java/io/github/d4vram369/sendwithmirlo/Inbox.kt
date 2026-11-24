@@ -33,6 +33,16 @@ object Inbox {
         return Result.WRITTEN
     }
 
+    /** Cuántos posts esperan en la carpeta. Solo es fiable si la carpeta del móvil es «Enviar y recibir» (ver docs, error #4). */
+    fun count(context: Context, tree: Uri): Int {
+        val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
+        return context.contentResolver.query(children, arrayOf(Document.COLUMN_DISPLAY_NAME), null, null, null)?.use { c ->
+            var n = 0
+            while (c.moveToNext()) if (c.getString(0).endsWith(".mirlo")) n++
+            n
+        } ?: 0
+    }
+
     private fun find(resolver: ContentResolver, tree: Uri, name: String): Uri? {
         val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
         resolver.query(children, arrayOf(Document.COLUMN_DOCUMENT_ID, Document.COLUMN_DISPLAY_NAME), null, null, null)
