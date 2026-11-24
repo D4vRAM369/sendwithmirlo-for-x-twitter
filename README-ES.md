@@ -102,6 +102,11 @@ En la app, en **Recordatorios**: cada cuánto avisar, el texto, cuántos pendien
 cuánto revisar (0 = nunca). Para que **Aplicar** pueda arrancar Syncthing, actívalo una vez en Syncthing-Fork:
 **Ajustes ▸ Comportamiento ▸ Control del servicio mediante difusión (broadcast)**.
 
+<p align="center">
+  <img src="screenshots/settings-es.png" width="300" alt="Ajustes de recordatorios: recordar cada 3 días, texto del recordatorio, preguntar con al menos 15 posts pendientes, revisar cada 24 horas y botón Guardar.">
+  <img src="screenshots/notifications-es.png" width="420" alt="Tres notificaciones: Pendientes para Mirlo: 18 con botón Aplicar; Sincronizando con Mirlo-desktop; Sincronizado. Guardados en Mirlo-desktop: 18.">
+</p>
+
 ## Si algo falla
 
 ```

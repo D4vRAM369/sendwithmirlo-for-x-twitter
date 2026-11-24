@@ -101,6 +101,11 @@ In the app, under **Reminders**: how often to remind you, the text, how many pen
 and how often to check (0 = never). For **Apply** to start Syncthing, enable it once in Syncthing-Fork:
 **Settings ▸ Behaviour ▸ Service control by broadcast**.
 
+<p align="center">
+  <img src="screenshots/settings-en.png" width="300" alt="Reminders settings: remind every 3 days, reminder text, ask when at least 15 posts are pending, check every 24 hours, and a Save button.">
+  <img src="screenshots/notifications-en.png" width="420" alt="Three notifications: Waiting for Mirlo: 18 with an Apply button; Syncing with Mirlo-desktop; Synced. Saved in Mirlo-desktop: 18.">
+</p>
+
 ## Troubleshooting
 
 ```
