@@ -8,3 +8,11 @@ local.properties
 keystore.properties
 *.jks
 *.keystore
+
+# Interno / local
+docs/
+.claude/
+.omx/
+*.apk
+*.aab
+.DS_Store
