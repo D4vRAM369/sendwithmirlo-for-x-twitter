@@ -36,7 +36,7 @@
     <string name="onb2_title">Guardar sin abrir el ordenador</string>
     <string name="onb2_body">Antes había que abrir Mirlo-desktop y pegar los enlaces uno a uno.\n\nAhora pulsas «Mirlo» en la hoja Compartir de X y listo: el post viaja solo por Syncthing hasta tu ordenador y Mirlo-desktop lo guarda. Si el ordenador está apagado, los envíos esperan en el móvil y te recordamos sincronizar.</string>
     <string name="onb3_title">Lo que necesitas</string>
-    <string name="onb3_body">1. Syncthing en el móvil y en el ordenador, con una carpeta compartida hacia ~/Mirlo/.inbox en modo «Enviar y recibir».\n2. Este módulo activado para X: LSPatch sin root o LSPosed con root.\n3. Elegir esa carpeta en la siguiente pantalla.</string>
+    <string name="onb3_body">1. Syncthing en el móvil y en el ordenador, con una carpeta compartida hacia ~/Mirlo/.inbox en modo «Enviar y recibir».\n2. Este módulo activado para X: LSPatch sin root o LSPosed con root.\n3. Elegir esa carpeta en la siguiente pantalla.\n\n¿Te lía crear la carpeta en Syncthing? Automatízalo: en Mirlo-desktop pulsa «Conectar móvil», escanea el QR con Syncthing-Fork y acepta la carpeta «Mirlo».</string>
     <string name="onb3_link">Descargar Syncthing-Fork</string>
     <string name="onb_next">Siguiente</string>
     <string name="onb_start">Empezar</string>

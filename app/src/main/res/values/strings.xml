@@ -36,7 +36,7 @@
     <string name="onb2_title">Save without opening your computer</string>
     <string name="onb2_body">Before, you had to open Mirlo-desktop and paste links one by one.\n\nNow you tap \"Mirlo\" in X\'s Share sheet and you are done: the post travels through Syncthing to your computer and Mirlo-desktop saves it. If the computer is off, sends wait on the phone and you get a reminder to sync.</string>
     <string name="onb3_title">What you need</string>
-    <string name="onb3_body">1. Syncthing on the phone and the computer, with a folder shared to ~/Mirlo/.inbox as \"Send &amp; Receive\".\n2. This module enabled for X: LSPatch without root or LSPosed with root.\n3. Choose that folder on the next screen.</string>
+    <string name="onb3_body">1. Syncthing on the phone and the computer, with a folder shared to ~/Mirlo/.inbox as \"Send &amp; Receive\".\n2. This module enabled for X: LSPatch without root or LSPosed with root.\n3. Choose that folder on the next screen.\n\nSetting up the Syncthing folder feels confusing? Automate it: in Mirlo-desktop click \"Connect phone\", scan the QR code with Syncthing-Fork and accept the \"Mirlo\" folder.</string>
     <string name="onb3_link">Get Syncthing-Fork</string>
     <string name="onb_next">Next</string>
     <string name="onb_start">Get started</string>
